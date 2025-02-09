@@ -1,18 +1,25 @@
 pipeline {
-    agent {
-        docker {
-            image 'maven:3.8.4-jdk-11'
-        }
+    agent any
+
+    tools {
+        maven 'Maven 3.8.8'
+        jdk 'jdk-17.0.6'
     }
-
+   
     stages {
-        stage ('Build') {
-
+        stage('Pre-Build') {
             steps {
-                sh 'mvn -B -DskipTests clean package'
-                
+                notifyBuildStart()
             }
         }
 
-    }
+        stage('PR-Build') {
+            when {
+                changeRequest()
+            }
+            steps {
+                sh "mvn clean install -U -Psonar -Dsonar.qualitygate.wait=true"
+            }
+        }
+  }
 }
